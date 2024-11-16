@@ -76,6 +76,47 @@ public class ShuntngYard {
 	//take the tokens from Tokens queue, and stored the reversed polish expression in ReversePolish queue
 	public static TokenList BuildFromTokens(TokenList tokenList) {
 		TokenList outputQueue = new TokenList();
+		TokenList opStack = new TokenList();
+		
+		
+		Node<String> token = tokenList.Dequeue();
+		if(token != null)
+		{
+			//do algorithm on this token
+			if(IsNumber(token.Payload))
+			{
+				outputQueue.Enqueue(token);
+			}
+			else
+			{
+				int rank = getPrecedence(token.Payload);
+				if(rank == 1) //"("
+				{
+					opStack.Push(token);
+				}
+				else if(rank == 5) //")"
+				{
+					Node<String> op = opStack.Peek();
+					while(op.Payload != "(")
+					{
+						outputQueue.Enqueue(opStack.Pop());
+					}
+					opStack.Pop();
+				}
+				else
+				{
+					Node<String> op = opStack.Peek();
+					int newRank = getPrecedence(op.Payload);
+					while(newRank > rank)
+					{
+						outputQueue.Enqueue(op);
+					}
+					opStack.Push(token);
+				}
+			}
+			//after everything is over
+			token = tokenList.Dequeue();
+		}
 		/*
 	     * 1.  While there are tokens to be read:
 	     * 2.        Read a token
