@@ -79,8 +79,10 @@ public class ShuntngYard {
 		TokenList opStack = new TokenList();
 		
 		
-		Node<String> token = tokenList.Dequeue();
-		if(token != null)
+		Node<String> token = tokenList.Head;
+		tokenList.Remove(token);
+		
+		while(token != null)
 		{
 			//do algorithm on this token
 			if(IsNumber(token.Payload))
@@ -94,29 +96,38 @@ public class ShuntngYard {
 				{
 					opStack.Push(token);
 				}
-				else if(rank == 5) //")"
-				{
-					Node<String> op = opStack.Peek();
-					while(op.Payload != "(")
-					{
-						outputQueue.Enqueue(opStack.Pop());
-					}
-					opStack.Pop();
+				else if (rank == 5) { // ")"
+	                Node<String> op = opStack.Peek();
+	                while (op != null && !op.Payload.equals("(")) 
+	                {
+	                    outputQueue.Enqueue(opStack.Pop());
+	                    op = opStack.Peek();
+	                }
+	                opStack.Pop();
 				}
 				else
 				{
 					Node<String> op = opStack.Peek();
-					int newRank = getPrecedence(op.Payload);
-					while(newRank > rank)
+					while (op != null && getPrecedence(op.Payload) >= rank) 
 					{
-						outputQueue.Enqueue(op);
-					}
-					opStack.Push(token);
+	                    outputQueue.Enqueue(opStack.Pop());
+	                    op = opStack.Peek();
+	                }
+	                opStack.Push(token);
 				}
 			}
 			//after everything is over
-			token = tokenList.Dequeue();
-		}
+			token = tokenList.Head;
+			if(token != null)
+			{
+			tokenList.Remove(token);
+			}	
+		 }
+		
+		 while (opStack.Head != null) 
+		 {
+		        outputQueue.Enqueue(opStack.Pop());
+		 }
 		/*
 	     * 1.  While there are tokens to be read:
 	     * 2.        Read a token
@@ -138,7 +149,49 @@ public class ShuntngYard {
 	//process use the reverse polish format of expression to process the math result
 	//output: the math result of the expression
 	public static int Process(TokenList queue) {
-		//to do
-		return 0;
+		//create a temp stack for numbers
+		TokenList stack = new TokenList();
+		while (!queue.IsEmpty())
+		{
+			Node<String> token = queue.Dequeue();
+			if(IsNumber(token.Payload))
+			{
+				stack.Push(token);
+			}
+			else
+			{
+				Node<String> firstRight = stack.Pop();
+				Node<String> secondLeft = stack.Pop();
+				int result = Math(secondLeft.Payload, firstRight.Payload, token.Payload);
+				Node<String> newNode = new Node<String>(result + "");
+				stack.Push(newNode);
+			}
+		}
+		
+		return Integer.parseInt(stack.Pop().Payload);
+	}
+	
+	public static int Math(String leftNumber, String rightNumber, String op)
+	{
+		switch (op) {
+			case "+":
+				return Integer.parseInt(leftNumber) + Integer.parseInt(rightNumber);
+			case "-":
+				return Integer.parseInt(leftNumber) - Integer.parseInt(rightNumber);
+			case "*":
+				return Integer.parseInt(leftNumber) * Integer.parseInt(rightNumber);
+			case "/":
+			    int right = Integer.parseInt(rightNumber);
+			    if (right == 0) {
+			        throw new ArithmeticException("Cannot divide by zero");
+			    }
+			    return Integer.parseInt(leftNumber) / right;
+			case "^":
+			    return (int) Math.pow(Integer.parseInt(leftNumber), Integer.parseInt(rightNumber));
+				
+			default:
+				return 0;
 	}
 }
+}
+
